@@ -1,1 +1,1 @@
-Json Local Document Database (JLOD) is a document oriented database  use to store small aplication data offline just like SQLITE but in json fomart, the local database can be exported to Remote MongoDB automatically when needed.
+Json Local Document Database (JLOD) is a document oriented database  use for storing small aplication data offline just like SQLITE but in json fomart, the local database can be exported to Remote MongoDB automatically when needed.
