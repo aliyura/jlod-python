@@ -6,11 +6,6 @@ import random
 from json import JSONDecodeError
 from os import path
 
-try:
-    import pymongo
-except ImportError:
-    print('Oop! Unable to find MangoDB')
-
 
 class Database:
     db = None
@@ -147,6 +142,11 @@ class Database:
         else:
             return True
 
+    @property
+    def size(self):
+        self.DBManager = DatabaseManager(self.db_collection)
+        return self.DBManager.getSize()
+
     def removeAll(self):
         self.DBManager.truncate()
 
@@ -215,6 +215,46 @@ class Database:
         else:
             return document
 
+    def exportTo(self, mongo_collection: classmethod, conditions={}):
+        self.DBManager = DatabaseManager(self.db_collection)
+        try:
+            import pymongo
+            documents: dict
+            if conditions.__len__() > 0:
+                documents = self.DBManager.search(conditions)
+            else:
+                documents = self.DBManager.read()
+            mongo_collection.insert_many(documents)
+        except ImportError:
+            console.log('Oops! Unable to find MangoDB')
+            return False
+        else:
+            return True
+
+    def importFrom(self, mongo_collection: classmethod, conditions: dict):
+        self.DBManager = DatabaseManager(self.db_collection)
+        doc: dict
+        try:
+            import pymongo
+            documents: dict
+            if conditions.__len__() > 0:
+                documents = mongo_collection.find({}, conditions)
+            else:
+                documents = mongo_collection.find({}, conditions)
+            for doc in documents:
+
+                if '_id' in doc.keys():
+                    doc.pop('_id')
+                if 'id' in doc.keys():
+                    doc.pop('id')
+                if doc.__len__() > 0:
+                    self.add(doc)
+        except ImportError as error:
+            console.log('Oop! Unable to find MangoDB')
+            return [error]
+        else:
+            return self.DBManager.read()
+
     def findOne(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
         if conditions:
@@ -222,7 +262,7 @@ class Database:
         else:
             documents = self.DBManager.read()
 
-        print(documents) #this is the dictionary to work with
+        print(documents)  # this is the dictionary to work with
 
     def find(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
@@ -248,11 +288,6 @@ class Database:
             else:
                 return documents
 
-    #
-    # def find(self, conditions: dict):
-    #     self.DBManager = DatabaseManager(self.db_collection)
-    #     return self.DBManager.search(conditions)
-
 
 class DatabaseManager:
     db_collection = None
@@ -263,6 +298,10 @@ class DatabaseManager:
     def generateId(self):
         return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(30))
 
+    def getSize(self):
+        st = os.stat(self.db_collection)
+        return st.st_size
+
     def truncate(self):
         collection = open(self.db_collection, 'r+')
         collection.truncate()
@@ -272,16 +311,21 @@ class DatabaseManager:
         collectionWriter = open(self.db_collection, 'w')
         collectionWriter.write(str(document))
         collectionWriter.close()
-        console.log('document added')
 
     def read(self):
         try:
             collectionReader = open(self.db_collection, 'r')
             document = collectionReader.read()
-            document = document.replace("'", "\"")
-            document = json.loads(document)
-        except JSONDecodeError:
-            return []
+            if document.__ne__(''):
+                document = document.replace("'", "\"")
+                document = json.loads(document)
+            else:
+                document = {
+                    "documents": [
+                    ]
+                }
+        except JSONDecodeError as error:
+            return [error]
         else:
             return document.get('documents')
 
@@ -297,10 +341,12 @@ class DatabaseManager:
                     for val in values:
                         if key in doc:
                             if str(doc[key]).lower() == val.lower():
-                                resultSet.append(doc)
+                                if doc not in resultSet:
+                                    resultSet.append(doc)
                 else:
                     if str(doc[key]).lower() == value.lower():
-                        resultSet.append(doc)
+                        if doc not in resultSet:
+                            resultSet.append(doc)
 
         return resultSet
 

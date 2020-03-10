@@ -1,16 +1,37 @@
 from jlod import database, console
+import pymongo
 
 dbi = database.connect('example').instance
 client = dbi.collection('users')
 
+host = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = host["example"]
+mongoClient = mydb["users"]
+#
+# response = client.exportTo(mongoClient)
+# console.log(response)
 
-result = client.findOne({
-    'age': 21,
-    'name': 'Ummi'
+# for doc in mongoClient.find():
+#     console.log(doc)
+
+# client.truncate
+# response = client.importFrom(mongoClient,{})
+# print(response)
+
+# client.addMany([
+#     {'name': 'Rabiu', 'age': 21},
+#     {'name': 'Kehinde', 'age': 22},
+#     {'name': 'Nazeh', 'age': 22},
+#     {'name': 'Abel', 'age': 21}
+# ])
+
+
+result = client.find({
+    'name': 'kehinde',
+    'age': 22
 })
-#ideally above command should return only
 
-
+print(client.size)
 
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},
