@@ -215,6 +215,18 @@ class Database:
         else:
             return document
 
+    def distinct(self, conditions: dict):
+            if conditions is not None:
+                document = self.DBManager.search(conditions)
+            else:
+                document = self.DBManager.read()
+            resultSet = []
+            for x in document:
+                if x not in resultSet:
+                    resultSet.append(x)
+            return(resultSet)
+
+            
     def exportTo(self, mongo_collection: classmethod, conditions={}):
         self.DBManager = DatabaseManager(self.db_collection)
         try:
@@ -328,6 +340,8 @@ class DatabaseManager:
             return [error]
         else:
             return document.get('documents')
+    
+
 
     def search(self, conditions: dict, ):
         document = self.read()
