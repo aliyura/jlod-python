@@ -26,12 +26,20 @@ mongoClient = mydb["users"]
 # ])
 
 
-result = client.find({
-    'name': 'kehinde',
-    'age': 22
-})
+# result = client.find({
+#     'name': 'kehinde',
+#     'age': 22
+# })
 
-print(client.size)
+# print(client.size)
+
+
+result = client.distinct(
+     {'name': [
+         'Abel','Nazeh'
+     ], 'age': 21}
+)
+print(result)
 
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},
