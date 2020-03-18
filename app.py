@@ -32,6 +32,19 @@ result = client.findOne({
 })
 
 print(result)
+# result = client.find({
+#     'name': 'kehinde',
+#     'age': 22
+# })
+
+# print(client.size)
+
+#
+# result = client.distinct(
+#      {'name': [
+#          'Abel','Nazeh'
+#      ], 'age': 21}
+# )
 
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},
