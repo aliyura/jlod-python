@@ -73,6 +73,46 @@ class Database:
         else:
             print('Oops! No collection provided')
 
+    def exportTo(self, mongo_collection: classmethod, conditions={}):
+        self.DBManager = DatabaseManager(self.db_collection)
+        try:
+            import pymongo
+            documents: dict
+            if conditions.__len__() > 0:
+                documents = self.DBManager.search(conditions)
+            else:
+                documents = self.DBManager.read()
+            mongo_collection.insert_many(documents)
+        except ImportError:
+            console.log('Oops! Unable to find MangoDB')
+            return False
+        else:
+            return True
+
+    def importFrom(self, mongo_collection: classmethod, conditions: dict):
+        self.DBManager = DatabaseManager(self.db_collection)
+        doc: dict
+        try:
+            import pymongo
+            documents: dict
+            if conditions.__len__() > 0:
+                documents = mongo_collection.find({}, conditions)
+            else:
+                documents = mongo_collection.find({}, conditions)
+            for doc in documents:
+
+                if '_id' in doc.keys():
+                    doc.pop('_id')
+                if 'id' in doc.keys():
+                    doc.pop('id')
+                if doc.__len__() > 0:
+                    self.add(doc)
+        except ImportError as error:
+            console.log('Oop! Unable to find MangoDB')
+            return [error]
+        else:
+            return self.DBManager.read()
+
     def override(self, obj: dict):
         document: dict
         if dict is not None:
@@ -151,9 +191,7 @@ class Database:
         self.DBManager.truncate()
 
     def update(self, search=[], replacement=[], conditions=dict):
-
         document: dict
-        document = self.DBManager.read()
         if conditions.__len__() <= 0:
             document = self.DBManager.read()
         else:
@@ -215,89 +253,64 @@ class Database:
         else:
             return document
 
-    def distinct(self, conditions: dict):
-            if conditions is not None:
-                document = self.DBManager.search(conditions)
-            else:
-                document = self.DBManager.read()
-            resultSet = []
-            for x in document:
-                if x not in resultSet:
-                    resultSet.append(x)
-            return(resultSet)
-
-            
-    def exportTo(self, mongo_collection: classmethod, conditions={}):
-        self.DBManager = DatabaseManager(self.db_collection)
-        try:
-            import pymongo
-            documents: dict
-            if conditions.__len__() > 0:
-                documents = self.DBManager.search(conditions)
-            else:
-                documents = self.DBManager.read()
-            mongo_collection.insert_many(documents)
-        except ImportError:
-            console.log('Oops! Unable to find MangoDB')
-            return False
+    def distinct(self, conditions=None, limit=0):
+        if conditions is not None and conditions.__len__() > 0:
+            document = self.DBManager.search(conditions)
         else:
-            return True
+            document = self.DBManager.read()
 
-    def importFrom(self, mongo_collection: classmethod, conditions: dict):
-        self.DBManager = DatabaseManager(self.db_collection)
-        doc: dict
-        try:
-            import pymongo
-            documents: dict
-            if conditions.__len__() > 0:
-                documents = mongo_collection.find({}, conditions)
-            else:
-                documents = mongo_collection.find({}, conditions)
-            for doc in documents:
+        resultSet = []
+        for doc in document:
+            if doc not in resultSet:
+                resultSet.append(doc)
 
-                if '_id' in doc.keys():
-                    doc.pop('_id')
-                if 'id' in doc.keys():
-                    doc.pop('id')
-                if doc.__len__() > 0:
-                    self.add(doc)
-        except ImportError as error:
-            console.log('Oop! Unable to find MangoDB')
-            return [error]
+        if limit > 0:
+            resultSet = self.DBManager.distinct(resultSet, limit)
+        return resultSet
+
+    def distinctOne(self, conditions: dict, limit=0):
+        if conditions is not None and conditions.__len__() > 0:
+            document = self.DBManager.search(conditions,'__ONE__')
         else:
-            return self.DBManager.read()
+            document = self.DBManager.read()
+
+        resultSet = []
+        for doc in document:
+            if doc not in resultSet:
+                resultSet.append(doc)
+
+        if limit > 0:
+            resultSet = self.DBManager.distinct(resultSet, limit)
+        return resultSet
 
     def findOne(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
         if conditions:
             documents = self.DBManager.search(conditions, '__ONE__')
+            if limit > 0:
+                documents = self.DBManager.distinct(documents, limit)
         else:
             documents = []
         return documents
 
-    def find(self, conditions: dict, limit=0):
+    def find(self, conditions=None, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
-        if conditions:
-            documents = self.DBManager.search(conditions)
-        else:
+        if conditions is None and limit == 0:
             documents = self.DBManager.read()
-
-        if limit != 0:
-            limitedDocuments = []
-            limiter = 0
-            if documents.__len__() >= limit:
-                for doc in documents:
-                    if limiter < limit:
-                        limitedDocuments.append(doc)
-                        limiter = limiter + 1
-                return limitedDocuments
-            else:
-                return documents
+            return documents
         else:
-            if conditions:
-                return self.DBManager.search(conditions)
+            if conditions is not None and conditions.__len__() > 0:
+                documents = self.DBManager.search(conditions)
             else:
+                documents = self.DBManager.read()
+            if limit > 0:
+                documents = self.DBManager.distinct(documents, limit)
                 return documents
+            else:
+                if conditions:
+                    return self.DBManager.search(conditions)
+                else:
+                    return documents
 
 
 class DatabaseManager:
@@ -339,33 +352,27 @@ class DatabaseManager:
             return [error]
         else:
             return document.get('documents')
-    
-
 
     def search(self, conditions: dict, clause='__ANY__'):
         document = self.read()
         resultSet = []
-
-        for doc in document:
-            for citem in conditions.items():
-
-                if clause.__eq__('__ONE__'):
-                    for dvalue in doc.values():
-                        ckey = str(citem[0])
-                        cvalue = str(citem[1])
-
-                        if cvalue == dvalue:
-                            print(str(dvalue)+' and '+str(cvalue))
-
-
-
-                    # if str(doc[key]).lower() == value.lower():
-                    #     if doc not in resultSet:
-                    #         print(doc)
-
-                else:
-                    key = str(s[0])
-                    value = str(s[1])
+        searchSet = []
+        if clause.__eq__('__ONE__') and conditions.__len__() > 1:
+            for cond in conditions.items():
+                key = str(cond[0])
+                value = str(cond[1])
+                for doc in document:
+                    if key in doc.keys():
+                        if str(doc[key]).__eq__(str(value)):
+                            searchSet.append(1)
+                    if searchSet.__len__() == conditions.__len__():
+                        if doc not in resultSet:
+                            resultSet.append(doc)
+        else:
+            for doc in document:
+                for cond in conditions.items():
+                    key = str(cond[0])
+                    value = str(cond[1])
                     if str(value).__contains__('[') and str(value).__contains__(']'):
                         values = ast.literal_eval(value)
                         for val in values:
@@ -373,12 +380,25 @@ class DatabaseManager:
                                 if str(doc[key]).lower() == val.lower():
                                     if doc not in resultSet:
                                         resultSet.append(doc)
-                        else:
-                            if str(doc[key]).lower() == value.lower():
-                                if doc not in resultSet:
-                                    resultSet.append(doc)
+                    else:
+                        if str(doc[key]).lower() == value.lower():
+                            if doc not in resultSet:
+                                resultSet.append(doc)
 
         return resultSet
+
+    def distinct(self, documents: dict, limit=0):
+        if limit != 0:
+            limitedDocuments = []
+            limiter = 0
+            if documents.__len__() >= limit:
+                for doc in documents:
+                    if limiter < limit:
+                        limitedDocuments.append(doc)
+                        limiter = limiter + 1
+                return limitedDocuments
+            else:
+                return documents
 
 
 class Console:

@@ -2,7 +2,7 @@ from jlod import database, console
 import pymongo
 
 dbi = database.connect('example').instance
-client = dbi.collection('users')
+client = dbi.collection('offers')
 
 host = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = host["example"]
@@ -18,20 +18,24 @@ mongoClient = mydb["users"]
 # response = client.importFrom(mongoClient,{})
 # print(response)
 
-# client.addMany([
-#     {'name': 'Rabiu', 'age': 21},
-#     {'name': 'Kehinde', 'age': 22},
-#     {'name': 'Nazeh', 'age': 22},
-#     {'name': 'Abel', 'age': 21}
+# client.truncate
+# result=client.addMany([
+#     {"name":"Rabiu","age":22},
+#     {"name": "Aminu", "age": 27},
+#     {"name": "Aisha", "age": 20},
+#     {"name": "Zainab", "age": 21},
+#     {"name": "Kehinde", "age": 22},
 # ])
-
-
-result = client.findOne({
-    'name': 'kehinde',
+#
+result = client.distinctOne({
     'age': 22
 })
 
 print(result)
+
+#
+# print(client.find({},2))
+
 # result = client.find({
 #     'name': 'kehinde',
 #     'age': 22
@@ -68,20 +72,6 @@ print(result)
 # search = client.limit(1)
 # print(search)
 #
-
-
-import pymongo
-#
-# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-# mydb = myclient["example"]
-# mycol = mydb["users"]
-# # mycol.insert_one({
-# #     'name': 'Aminu',
-# #     'age': 24
-# # })
-# for x in mycol.find():
-#   print(x)
-
 
 # result = client.addMany(
 #     {'name': 'Zainab', 'age': 20},
