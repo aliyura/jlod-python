@@ -26,12 +26,12 @@ mongoClient = mydb["users"]
 # ])
 
 
-result = client.find({
+result = client.findOne({
     'name': 'kehinde',
     'age': 22
 })
 
-print(client.size)
+print(result)
 
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},

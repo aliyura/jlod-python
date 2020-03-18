@@ -258,11 +258,10 @@ class Database:
     def findOne(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
         if conditions:
-            documents = self.DBManager.search(conditions)
+            documents = self.DBManager.search(conditions, '__ONE__')
         else:
-            documents = self.DBManager.read()
-
-        print(documents)  # this is the dictionary to work with
+            documents = []
+        return documents
 
     def find(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
@@ -329,24 +328,41 @@ class DatabaseManager:
         else:
             return document.get('documents')
 
-    def search(self, conditions: dict, ):
+    def search(self, conditions: dict, clause='__ANY__'):
         document = self.read()
         resultSet = []
+
         for doc in document:
-            for s in conditions.items():
-                key = str(s[0])
-                value = str(s[1])
-                if str(value).__contains__('[') and str(value).__contains__(']'):
-                    values = ast.literal_eval(value)
-                    for val in values:
-                        if key in doc:
-                            if str(doc[key]).lower() == val.lower():
+            for citem in conditions.items():
+
+                if clause.__eq__('__ONE__'):
+                    for dvalue in doc.values():
+                        ckey = str(citem[0])
+                        cvalue = str(citem[1])
+
+                        if cvalue == dvalue:
+                            print(str(dvalue)+' and '+str(cvalue))
+
+
+
+                    # if str(doc[key]).lower() == value.lower():
+                    #     if doc not in resultSet:
+                    #         print(doc)
+
+                else:
+                    key = str(s[0])
+                    value = str(s[1])
+                    if str(value).__contains__('[') and str(value).__contains__(']'):
+                        values = ast.literal_eval(value)
+                        for val in values:
+                            if key in doc:
+                                if str(doc[key]).lower() == val.lower():
+                                    if doc not in resultSet:
+                                        resultSet.append(doc)
+                        else:
+                            if str(doc[key]).lower() == value.lower():
                                 if doc not in resultSet:
                                     resultSet.append(doc)
-                else:
-                    if str(doc[key]).lower() == value.lower():
-                        if doc not in resultSet:
-                            resultSet.append(doc)
 
         return resultSet
 
