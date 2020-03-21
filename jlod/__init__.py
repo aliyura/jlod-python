@@ -3,6 +3,7 @@ import json
 import ast
 import string
 import random
+import copy
 from json import JSONDecodeError
 from os import path
 
@@ -148,10 +149,11 @@ class Database:
 
     def addMany(self, documents: []):
         try:
-            for document in documents:
-                self.add(document)
+            if documents.__len__() > 0:
+                for document in documents:
+                    self.add(document)
             console.log(str(len(documents)) + ' documents added')
-        except:
+        except ValueError as ex:
             return False
         else:
             return True
@@ -187,71 +189,60 @@ class Database:
         self.DBManager = DatabaseManager(self.db_collection)
         return self.DBManager.getSize()
 
+    def update(self, keyAndReplacement: dict, conditions=None):
+        if conditions is None:
+            document = self.DBManager.read()
+        else:
+            document = self.DBManager.search(conditions)
+
+        self.DBManager.update(document, keyAndReplacement, conditions)
+
+    def updateOne(self, keyAndReplacement: dict, conditions=None):
+        if conditions is None:
+            document = self.DBManager.read()
+        else:
+            document = self.DBManager.search(conditions, '__ONE__')
+
+        self.DBManager.update(document, keyAndReplacement, conditions)
+
     def removeAll(self):
         self.DBManager.truncate()
 
-    def update(self, search=[], replacement=[], conditions=dict):
-        document: dict
-        if conditions.__len__() <= 0:
+    def removeOne(self, conditions=None):
+        if conditions is None:
+            document = self.DBManager.read()
+        else:
+            document = self.DBManager.search(conditions, '__ONE__')
+
+        if conditions is not None:
+            return self.DBManager.remove(document)
+
+    def remove(self, conditions=None):
+        if conditions is None:
             document = self.DBManager.read()
         else:
             document = self.DBManager.search(conditions)
 
-        index = 0
-        for doc in document:
-            for s in search:
-                if s in doc:
-                    print(str(s) + ':' + str(replacement[index]))
-                    doc[s] = replacement[index]
-                    index = index + 1
-
-        for doc in document:
-            print(doc.get('id'))
-
-    def remove(self, conditions: dict):
-        try:
-            if conditions.__len__() <= 0:
-                self.truncate
-            else:
-                document = self.DBManager.read()
-                resultSet = self.DBManager.search(conditions)
-                for doc in resultSet:
-                    document.remove(doc)
-                dictionary = {
-                    'documents': document
-                }
-                self.DBManager.write(dictionary)
-
-        except():
-            return False
+        if conditions is None:
+            return self.truncate
         else:
-            return True
+            return self.DBManager.remove(document)
 
-    def get(self, key: str, conditions: dict):
-        document: dict
-        resultSet = []
-        if conditions.__len__() <= 0:
+    def getOne(self, keyList=None, conditions=None):
+        if conditions is None:
+            document = self.DBManager.read()
+        else:
+            document = self.DBManager.search(conditions, '__ONE__')
+
+        return self.DBManager.get(document, keyList)
+
+    def get(self, keyList=None, conditions=None):
+        if conditions is None:
             document = self.DBManager.read()
         else:
             document = self.DBManager.search(conditions)
 
-        if key.__ne__("") and key is not None:
-            if key.__ne__("*"):
-                if str(key).__contains__(','):
-                    keys = str(key).split(',')
-                    for doc in document:
-                        for key in keys:
-                            if key in doc.keys():
-                                resultSet.append(doc[key])
-                else:
-                    for doc in document:
-                        if key in doc.keys():
-                            resultSet.append(doc[key])
-            else:
-                resultSet = document
-            return resultSet
-        else:
-            return document
+        return self.DBManager.get(document, keyList)
 
     def distinct(self, conditions=None, limit=0):
         if conditions is not None and conditions.__len__() > 0:
@@ -265,12 +256,12 @@ class Database:
                 resultSet.append(doc)
 
         if limit > 0:
-            resultSet = self.DBManager.distinct(resultSet, limit)
+            resultSet = distinct(resultSet, limit)
         return resultSet
 
     def distinctOne(self, conditions: dict, limit=0):
         if conditions is not None and conditions.__len__() > 0:
-            document = self.DBManager.search(conditions,'__ONE__')
+            document = self.DBManager.search(conditions, '__ONE__')
         else:
             document = self.DBManager.read()
 
@@ -280,7 +271,7 @@ class Database:
                 resultSet.append(doc)
 
         if limit > 0:
-            resultSet = self.DBManager.distinct(resultSet, limit)
+            resultSet = distinct(resultSet, limit)
         return resultSet
 
     def findOne(self, conditions: dict, limit=0):
@@ -288,7 +279,7 @@ class Database:
         if conditions:
             documents = self.DBManager.search(conditions, '__ONE__')
             if limit > 0:
-                documents = self.DBManager.distinct(documents, limit)
+                documents = distinct(documents, limit)
         else:
             documents = []
         return documents
@@ -304,13 +295,27 @@ class Database:
             else:
                 documents = self.DBManager.read()
             if limit > 0:
-                documents = self.DBManager.distinct(documents, limit)
+                documents = distinct(documents, limit)
                 return documents
             else:
                 if conditions:
                     return self.DBManager.search(conditions)
                 else:
                     return documents
+
+
+def distinct(documents: dict, limit=0):
+    if limit != 0:
+        limitedDocuments = []
+        limiter = 0
+        if documents.__len__() >= limit:
+            for doc in documents:
+                if limiter < limit:
+                    limitedDocuments.append(doc)
+                    limiter = limiter + 1
+            return limitedDocuments
+        else:
+            return documents
 
 
 class DatabaseManager:
@@ -353,21 +358,42 @@ class DatabaseManager:
         else:
             return document.get('documents')
 
+    def get(self, document: dict, keys=None):
+        resultSet = []
+        if keys is not None:
+            if keys.__ne__("*"):
+                for doc in document:
+                    for key in keys:
+                        if key in doc.keys():
+                            resultSet.append(doc[key])
+            else:
+                resultSet = document
+            return resultSet
+        else:
+            return document
+
+    def select(self, document: dict, conditions):
+        resultSet = []
+        for cond in conditions.items():
+            key = cond[0]
+            value = cond[1]
+            if key in document:
+                if str(document[key]).__eq__(str(value)):
+                    resultSet.append(1)
+
+        if resultSet.__len__() == conditions.__len__():
+            return document
+        else:
+            return None
+
     def search(self, conditions: dict, clause='__ANY__'):
         document = self.read()
         resultSet = []
-        searchSet = []
         if clause.__eq__('__ONE__') and conditions.__len__() > 1:
-            for cond in conditions.items():
-                key = str(cond[0])
-                value = str(cond[1])
-                for doc in document:
-                    if key in doc.keys():
-                        if str(doc[key]).__eq__(str(value)):
-                            searchSet.append(1)
-                    if searchSet.__len__() == conditions.__len__():
-                        if doc not in resultSet:
-                            resultSet.append(doc)
+            for doc in document:
+                searchSet = self.select(doc, conditions)
+                if searchSet is not None:
+                    resultSet.append(searchSet)
         else:
             for doc in document:
                 for cond in conditions.items():
@@ -387,18 +413,45 @@ class DatabaseManager:
 
         return resultSet
 
-    def distinct(self, documents: dict, limit=0):
-        if limit != 0:
-            limitedDocuments = []
-            limiter = 0
-            if documents.__len__() >= limit:
-                for doc in documents:
-                    if limiter < limit:
-                        limitedDocuments.append(doc)
-                        limiter = limiter + 1
-                return limitedDocuments
-            else:
-                return documents
+    def update(self, document: dict, keyAndReplacement: dict, conditions=None):
+        if keyAndReplacement.__len__() > 0 and document.__len__() > 0:
+            oldDocument = copy.deepcopy(document)
+            for doc in document:
+                for sar in keyAndReplacement.items():
+                    key = sar[0]
+                    value = sar[1]
+                    if key in doc:
+                        doc[key] = value
+                    else:
+                        doc.__setitem__(key, value)
+
+            base = self.DBManager.read()
+            for oldDoc in oldDocument:
+                base = [x for x in base if x != oldDoc]
+
+            for newDoc in document:
+                if newDoc is not None:
+                    base.append(newDoc)
+
+            dictionary = {
+                'documents': base
+            }
+            self.write(dictionary)
+            return True
+        else:
+            return False
+
+    def remove(self, document: dict):
+
+        base = self.read()
+        for doc in document:
+            base = [x for x in base if x != doc]
+
+        dictionary = {
+            'documents': base
+        }
+        self.write(dictionary)
+        return True
 
 
 class Console:

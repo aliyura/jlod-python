@@ -7,7 +7,10 @@ client = dbi.collection('offers')
 host = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = host["example"]
 mongoClient = mydb["users"]
-#
+
+
+# Json Local Document Database (JLOD) is a document oriented database use for
+# storing small aplication data offline just like SQLITE but in json fomart, the local database can be exported to Remote MongoDB automatically when needed.
 # response = client.exportTo(mongoClient)
 # console.log(response)
 
@@ -26,14 +29,30 @@ mongoClient = mydb["users"]
 #     {"name": "Zainab", "age": 21},
 #     {"name": "Kehinde", "age": 22},
 # ])
-#
-result = client.distinctOne({
-    'age': 22
-})
 
-print(result)
+# result = client.findOne({
+#     'age': 22,
+#     'name': 'Kehinde'
+# })
 
-#
+# result = client.removeOne({
+#     'name': 'Aminu'
+# })
+# print(result)
+
+# result = client.getOne(['name', 'age'], {
+#     'age': 22
+# })
+# print(result)
+
+# isUpdated = client.update({'name': 'Amina'}, {
+#     'name': 'Rabiu'
+# })
+# if isUpdated:
+#     print('updated')
+# #
+
+
 # print(client.find({},2))
 
 # result = client.find({
