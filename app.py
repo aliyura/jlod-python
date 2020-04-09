@@ -2,7 +2,7 @@ from jlod import database, console
 import pymongo
 
 dbi = database.connect('example').instance
-client = dbi.collection('offers')
+client = dbi.collection('offers');
 
 host = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = host["example"]
@@ -33,7 +33,9 @@ mongoClient = mydb["users"]
 # result = client.findOne({
 #     'age': 22,
 #     'name': 'Kehinde'
-# })
+# });
+
+# print(result);
 
 # result = client.removeOne({
 #     'name': 'Aminu'
@@ -63,12 +65,10 @@ mongoClient = mydb["users"]
 # print(client.size)
 
 #
-# result = client.distinct(
-#      {'name': [
-#          'Abel','Nazeh'
-#      ], 'age': 21}
-# )
-
+result = client.sort(
+    {}, {"name":1, "age":1}, limit=5
+)
+# print(result);
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},
 #     {'name': 'Abubakar', 'age': 20}
@@ -104,7 +104,7 @@ mongoClient = mydb["users"]
 # client2.remove(name='Rabs')
 # client2.drop
 
-# result = client1.get('name,age,city')
+# result = client.get(['name','city'])
 # console.log(result)
 
 # client2.add({
