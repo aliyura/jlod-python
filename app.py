@@ -65,9 +65,9 @@ mongoClient = mydb["users"]
 # print(client.size)
 
 #
-result = client.sort(
-    {}, {"name":1, "age":1}, limit=5
-)
+# result = client.sort(
+#     {}, {"name":1, "age":1}, limit=5
+# )
 # print(result);
 # result = client.addMany([
 #     {'name': 'Ummi', 'age': 21},
@@ -92,13 +92,12 @@ result = client.sort(
 # print(search)
 #
 
-# result = client.addMany(
-#     {'name': 'Zainab', 'age': 20},
-#     {'name': 'Kubra', 'age': 20}
-# )
+result = client.distinct('name'
+    # {'name':1}
+)
 
 # resultSet = client.documents
-# print(resultSet)
+print(result);
 
 # client2.truncate
 # client2.remove(name='Rabs')
