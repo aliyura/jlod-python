@@ -7,7 +7,6 @@ import random
 import copy
 from json import JSONDecodeError
 from os import path
-import array
 
 
 class Database:
@@ -198,25 +197,8 @@ class Database:
 
         self.DBManager.update(document, keyAndReplacement, conditions)
 
-    def updateOne(self, keyAndReplacement: dict, conditions=None):
-        if conditions is None:
-            document = self.DBManager.read()
-        else:
-            document = self.DBManager.search(conditions, '__ONE__')
-
-        self.DBManager.update(document, keyAndReplacement, conditions)
-
     def removeAll(self):
         self.DBManager.truncate()
-
-    def removeOne(self, conditions=None):
-        if conditions is None:
-            document = self.DBManager.read()
-        else:
-            document = self.DBManager.search(conditions, '__ONE__')
-
-        if conditions is not None:
-            return self.DBManager.remove(document)
 
     def sort(self, conditions=None, sorts=None, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
@@ -288,6 +270,41 @@ class Database:
             resultSet.append(documents[0])
         return resultSet
 
+    def distinct(self, conditions=None, limit=0):
+        valuelookup = "";
+        keylookup = "";
+        resultSet = [];
+        key_checker = {}
+        params = "";
+        already_added = [];
+        document = [];
+        if isinstance(conditions, dict):
+            for key, vlaue in conditions.items():
+                valuelookup = vlaue;
+                keylookup = key;
+        else:
+            valuelookup = keylookup = conditions;
+
+        if conditions is not None and conditions.__len__() > 0:
+            document = self.DBManager.read();
+            for doc in document:
+                params = doc[keylookup];
+                name = doc[keylookup];
+                doc_val = doc[keylookup];
+                if params in key_checker:
+                    key_checker[params] = doc_val;
+                elif name not in key_checker:
+                    key_checker[params] = doc_val;
+            for doc in document:
+                name = doc[keylookup];
+                doc_val = doc[keylookup];
+                if (key_checker[name] == doc_val) and (name not in already_added):
+                    resultSet.append(doc);
+                    already_added.append(name);
+        if limit > 0:
+            resultSet = distinct(resultSet, limit);
+        return resultSet;
+
     def find(self, conditions=None, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
         if conditions is None and limit == 0:
@@ -306,19 +323,6 @@ class Database:
                     return self.DBManager.search(conditions)
                 else:
                     return documents
-
-    def distinct(self, documents: dict, limit=0):
-        if limit != 0:
-            limitedDocuments = []
-            limiter = 0
-            if documents.__len__() >= limit:
-                for doc in documents:
-                    if limiter < limit:
-                        limitedDocuments.append(doc)
-                        limiter = limiter + 1
-                return limitedDocuments
-            else:
-                return documents
 
 
 class DatabaseManager:

@@ -18,8 +18,11 @@ client = dbi.collection('users')
 #  $nin
 
 
-# result = client.find({"name":"Rabiu"})
-# print(result)
+result = client.find({"name": "Rabiu"})
+print(result)
+
+result = client.distinct()
+
 
 # single conditions
 # result = client.find({
@@ -61,21 +64,14 @@ client = dbi.collection('users')
 # print(result)
 # 
 
-#single check, by default is OR operator
+# single check, by default is OR operator
 # result = client.find([{"name": {"$eq": "Rabiu"}},{"age": {"$eq": 22}}])
 # print(result)
 #
 # search = client.limit(1)
 # print(search)
 #
-
-# result = client.addMany(
-#     {'name': 'Zainab', 'age': 20},
-#     {'name': 'Kubra', 'age': 20}
-# )
-
 # resultSet = client.documents
-# print(resultSet)
 
 # client2.truncate
 # client2.remove(name='Rabs')
