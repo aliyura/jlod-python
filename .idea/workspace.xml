@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="61e56062-8b5a-4948-ae63-d63d3478d527" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/jlod/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/jlod/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jlod/databases/example.db/offers.collection" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/jlod/databases/example.db/users.collection" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/jlod/databases/example.db/offers.collection" beforeDir="false" afterPath="$PROJECT_DIR$/jlod/databases/example.db/offers.collection" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

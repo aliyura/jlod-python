@@ -492,8 +492,8 @@ class DatabaseManager:
                             for doc in documents:
                                 result = self.extract(doc, key, operator, value)
                                 if result is not None:
-                                   if result not in resultSet:
-                                       resultSet.append(result)
+                                    if result not in resultSet:
+                                        resultSet.append(result)
                     else:
                         for doc in documents:
                             for cond in conditions.items():
