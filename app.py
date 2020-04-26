@@ -17,6 +17,7 @@ client = dbi.collection('users')
 #  $in
 #  $nin
 
+
 # result = client.find({"name":"Rabiu"})
 # print(result)
 
