@@ -217,6 +217,7 @@ class Database:
         if conditions is not None:
             return self.DBManager.remove(document)
 
+
     def remove(self, conditions=None):
         if conditions is None:
             document = self.DBManager.read()
@@ -227,6 +228,51 @@ class Database:
             return self.truncate
         else:
             return self.DBManager.remove(document)
+
+    def sort(self, conditions=None, sorts=None, limit=0):
+        print(sorts);
+        sortingParam = {}
+        reverseFlag = False
+        
+        self.DBManager = DatabaseManager(self.db_collection)
+        if conditions is None and sorts is None:
+            documents = self.DBManager.read();
+        else:
+            if conditions is not None and conditions.__len__() > 0:
+                documents = self.DBManager.search(conditions)
+
+            else:
+                documents = self.DBManager.read()
+                
+            if limit  > 0:
+                documents = distinct(documents, limit);
+            else:
+                if conditions:
+                    documents = self.DBManager.search(conditions);
+            
+            if sorts.__len__() > 0:
+              for key, val in sorts.items():
+                print(f'intial doc: {documents}');
+                print(key, val)
+                keyName = key
+                valKey = val
+                if val.__eq__(-1):
+                    reverseFlag = False;
+                    print(f'positive {key, val}');
+                    print(documents);
+
+                else:
+                    reverseFlag = True;
+                    print(f'negative {key, val}');
+                    print(documents)
+
+                documents.sort(key=lambda x: x.__getitem__(
+                        keyName), reverse=reverseFlag)
+                print(key, val);
+       
+        return documents;
+                    
+
 
     def getOne(self, keyList=None, conditions=None):
         if conditions is None:
@@ -245,34 +291,38 @@ class Database:
         return self.DBManager.get(document, keyList)
 
     def distinct(self, conditions=None, limit=0):
-        if conditions is not None and conditions.__len__() > 0:
-            document = self.DBManager.search(conditions)
+        valuelookup = ""; keylookup = "";
+        resultSet = [];
+        key_checker = {}
+        params = "";
+        already_added = [];
+        document = [];
+        if isinstance(conditions, dict):       
+            for key, vlaue in conditions.items():
+                valuelookup = vlaue;
+                keylookup = key;     
         else:
-            document = self.DBManager.read()
-
-        resultSet = []
-        for doc in document:
-            if doc not in resultSet:
-                resultSet.append(doc)
-
-        if limit > 0:
-            resultSet = distinct(resultSet, limit)
-        return resultSet
-
-    def distinctOne(self, conditions: dict, limit=0):
+            valuelookup = keylookup = conditions;
+            
         if conditions is not None and conditions.__len__() > 0:
-            document = self.DBManager.search(conditions, '__ONE__')
-        else:
-            document = self.DBManager.read()
-
-        resultSet = []
-        for doc in document:
-            if doc not in resultSet:
-                resultSet.append(doc)
-
+            document = self.DBManager.read();
+            for doc in document:
+                params = doc[keylookup];
+                name = doc[keylookup];
+                doc_val = doc[keylookup];
+                if params in key_checker:
+                        key_checker[params] = doc_val;
+                elif name not in key_checker:
+                    key_checker[params] = doc_val;
+            for doc in document:
+                name = doc[keylookup];
+                doc_val = doc[keylookup];
+                if (key_checker[name] == doc_val) and (name not in already_added):
+                    resultSet.append(doc);
+                    already_added.append(name);
         if limit > 0:
-            resultSet = distinct(resultSet, limit)
-        return resultSet
+            resultSet = distinct(resultSet, limit);
+        return resultSet;
 
     def findOne(self, conditions: dict, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
