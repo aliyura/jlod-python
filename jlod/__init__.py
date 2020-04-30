@@ -252,7 +252,7 @@ class Database:
 
     def get(self, keyList=None, conditions=None):
         if conditions is None:
-            docfindument = self.DBManager.read()
+            document = self.DBManager.read()
         else:
             document = self.DBManager.search(conditions)
 
@@ -366,13 +366,22 @@ class DatabaseManager:
             return document.get('documents')
 
     def get(self, document: dict, keys=None):
+
         resultSet = []
         if keys is not None:
             if keys.__ne__("*"):
                 for doc in document:
+                    localDict = {
+                        "$~": "init"
+                    }
                     for key in keys:
                         if key in doc.keys():
-                            resultSet.append(doc[key])
+                            if type(doc[key]) is string:
+                                localDict.update({'' + key + '': '' + doc[key] + ''})
+                            else:
+                                localDict.update({'' + key + '':doc[key]})
+                    localDict.pop("$~")
+                    resultSet.append(localDict)
             else:
                 resultSet = document
             return resultSet

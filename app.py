@@ -24,27 +24,24 @@ client = dbi.collection('users')
 #     {"name": 'Rabiu',"city": 'Lagos',"age": 23}
 # ])
 
-
-result = client.find({"name": {"$in": ["Rabiu"]}})
-print(result)
+#
+# result = client.find({})
+# print(result)
 
 # result = client.distinct()
 
 
 # single conditions
 # result = client.find({
-#     "$and": {"age": {"$gte": 22}}
+#     "$and": {"name": {"$eq": "Rabie"}}
 # })
 # print(result)
 
 # #multiple conditions
-# result = client.find({
-#     "$and": [{"name": {"$eq": "Rabiu"}}, {"age": {"$eq": 22}}]
-#     'name': 'kehinde',
-#     'age': 22
-# })
-
-# print(client.size)
+result = client.find({
+    "$and": [{"name": {"$eq": "Rabie"}}, {"name": {"$eq": "Jhon"}}]
+})
+print(result)
 
 #
 # result = client.sort(
