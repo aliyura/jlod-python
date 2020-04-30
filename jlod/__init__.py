@@ -400,16 +400,13 @@ class DatabaseManager:
             if int(str(doc[key]).lower()) <= int(str(value).lower()):
                 resultSet = doc
         elif operator.__eq__("$in"):
-            if type(value) is not str and isinstance(value, collections.Sequence):
-                for each in value:
-                    if str(doc[key]).lower() == str(each).lower():
-                        resultSet = doc
+            if str(doc[key]).lower() == str(value).lower():
+                resultSet = doc
 
         elif operator.__eq__("$nin"):
-            if type(value) is not str and isinstance(value, collections.Sequence):
-                for each in value:
-                    if str(doc[key]).lower() != str(each).lower():
-                        resultSet = doc
+            if str(doc[key]).lower() != str(value).lower():
+                resultSet = doc
+
         return resultSet
 
     def query(self, documents: dict, logicKey: str, conditions: dict):
@@ -484,6 +481,7 @@ class DatabaseManager:
             for cond in conditions.items():
                 key = str(cond[0]).lower()
                 value = cond[1]
+
                 if key.startswith("$"):
                     if self.query(documents, key, value).__len__() > 0:
                         resultSet = self.query(documents, key, value)[:]
@@ -494,10 +492,26 @@ class DatabaseManager:
                             operator = citems[0]
                             value = citems[1]
                             for doc in documents:
-                                result = self.extract(doc, key, operator, value)
-                                if result is not None:
-                                    if result not in resultSet:
-                                        resultSet.append(result)
+                                if type(value) is not str and isinstance(value, collections.Sequence):
+                                    for each in value:
+                                        result = self.extract(doc, key, operator, each)
+                                        if result is not None:
+                                            if str(operator) == "$nin":
+                                                if result not in resultSet:
+                                                    if result[key] not in value:
+                                                        lowerResult = map(str, value)
+                                                        lowerResult = map(str.lower, lowerResult)
+                                                        if str(result[key]).lower() not in lowerResult:
+                                                            resultSet.append(result)
+                                            else:
+                                                if result not in resultSet:
+                                                    resultSet.append(result)
+                                else:
+                                    result = self.extract(doc, key, operator, value)
+                                    if result is not None:
+                                        if result not in resultSet:
+                                            resultSet.append(result)
+
                     else:
                         for doc in documents:
                             for cond in conditions.items():

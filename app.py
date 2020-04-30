@@ -17,11 +17,18 @@ client = dbi.collection('users')
 #  $in
 #  $nin
 
+# client.addMany([
+#     {"name": 'Aisha',"city": 'Lagos',"age": 23},
+#     {"name": 'Amina',"city": 'Lagos',"age": 24},
+#     {"name": 'Zainab',"city": 'Lagos',"age": 25},
+#     {"name": 'Rabiu',"city": 'Lagos',"age": 23}
+# ])
 
-result = client.find({"name": "Rabiu"})
+
+result = client.find({"name": {"$in": ["Rabiu"]}})
 print(result)
 
-result = client.distinct()
+# result = client.distinct()
 
 
 # single conditions
