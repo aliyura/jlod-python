@@ -195,15 +195,15 @@ class Database:
         else:
             document = self.DBManager.search(conditions)
 
-        self.DBManager.update(document, keyAndReplacement, conditions)
+        self.DBManager.update(document, keyAndReplacement)
 
     def removeAll(self):
         self.DBManager.truncate()
 
-    def sort(self, conditions=None, sorts=None, limit=0):
+    def sort(self, sorts=None, conditions=None, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
         if conditions is None and sorts is None:
-            documents = self.DBManager.read();
+            documents = self.DBManager.read()
         else:
             if conditions is not None and conditions.__len__() > 0:
                 documents = self.DBManager.search(conditions)
@@ -211,10 +211,10 @@ class Database:
                 documents = self.DBManager.read()
 
             if limit > 0:
-                documents = self.distinct(documents, limit);
+                documents = self.distinct(documents, limit)
             else:
                 if conditions:
-                    documents = self.DBManager.search(conditions);
+                    documents = self.DBManager.search(conditions)
 
             if sorts.__len__() > 0:
                 for key, val in sorts.items():
@@ -271,39 +271,37 @@ class Database:
         return resultSet
 
     def distinct(self, conditions=None, limit=0):
-        valuelookup = "";
-        keylookup = "";
-        resultSet = [];
+        keylookup = ""
+        resultSet = []
         key_checker = {}
-        params = "";
-        already_added = [];
-        document = [];
+        already_added = []
+
         if isinstance(conditions, dict):
             for key, vlaue in conditions.items():
-                valuelookup = vlaue;
-                keylookup = key;
+                valuelookup = vlaue
+                keylookup = key
         else:
-            valuelookup = keylookup = conditions;
+            valuelookup = keylookup = conditions
 
         if conditions is not None and conditions.__len__() > 0:
-            document = self.DBManager.read();
+            document = self.DBManager.read()
             for doc in document:
-                params = doc[keylookup];
-                name = doc[keylookup];
-                doc_val = doc[keylookup];
+                params = doc[keylookup]
+                name = doc[keylookup]
+                doc_val = doc[keylookup]
                 if params in key_checker:
-                    key_checker[params] = doc_val;
+                    key_checker[params] = doc_val
                 elif name not in key_checker:
-                    key_checker[params] = doc_val;
+                    key_checker[params] = doc_val
             for doc in document:
-                name = doc[keylookup];
-                doc_val = doc[keylookup];
+                name = doc[keylookup]
+                doc_val = doc[keylookup]
                 if (key_checker[name] == doc_val) and (name not in already_added):
-                    resultSet.append(doc);
-                    already_added.append(name);
+                    resultSet.append(doc)
+                    already_added.append(name)
         if limit > 0:
-            resultSet = distinct(resultSet, limit);
-        return resultSet;
+            resultSet = distinct(resultSet, limit)
+        return resultSet
 
     def find(self, conditions=None, limit=0):
         self.DBManager = DatabaseManager(self.db_collection)
@@ -492,8 +490,22 @@ class DatabaseManager:
                 value = cond[1]
 
                 if key.startswith("$"):
-                    if self.query(documents, key, value).__len__() > 0:
-                        resultSet = self.query(documents, key, value)[:]
+                    if type(value) is list:
+                        for cdoc in value:
+                            for condoc in cdoc.items():
+                                key = str(condoc[0]).lower()
+                                items = condoc[1]
+                                for citems in items.items():
+                                    operator = citems[0]
+                                    value = citems[1]
+                                    for doc in documents:
+                                        result = self.extract(doc, key, operator, value)
+                                        if result is not None:
+                                            if result not in resultSet:
+                                                resultSet.append(result)
+                    else:
+                        if self.query(documents, key, value).__len__() > 0:
+                            resultSet = self.query(documents, key, value)[:]
                 else:
 
                     if type(value) is dict:
@@ -551,7 +563,7 @@ class DatabaseManager:
                     else:
                         doc.__setitem__(key, value)
 
-            base = self.DBManager.read()
+            base = self.read()
             for oldDoc in oldDocument:
                 base = [x for x in base if x != oldDoc]
 
